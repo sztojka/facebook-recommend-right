@@ -1,0 +1,73 @@
+<!-- facebook recommend box hack to prevent it from overflowing to the right written by https://github.com/sztojka -->
+<html>
+	<head>
+		<style type="text/css">
+.outer {
+  display:inline-block;
+  position:relative;
+  float:right;
+  margin-top:60px;
+  overflow:hidden; // this is important for hiding the recommend button to avoid it to jump around
+}
+
+.outer.open .fb-like {
+  top: -25px; // hiding the recommend button
+}
+
+		</style>
+		<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+		<script>
+$(function(){
+	
+	// mutation observer to catch recommend text open
+	var observer = new MutationObserver(function(mutations) {
+		//the outer div of the recommend box
+		var outer = document.getElementById('tmp_like');
+		
+		// check mutations 
+		mutations.forEach(function(mutation) {
+			if (mutation.type == 'attributes' && mutation.attributeName == 'style')
+				if ( parseInt(mutation.target.style.height) > 50 ) { // the recommend box is opened
+					outer.className = "outer open"; // adds 'open' class to the outer div
+					outer.style.height = mutation.target.style.height;
+					outer.style.width = mutation.target.style.width;
+				} else { // the recommend box is closed
+					outer.className = "outer";
+					outer.style.height = "20px";
+					outer.style.width = "auto";
+				}
+		});
+	});
+	
+	// bind observer to fb like iframe
+	(function($,observer) {
+		var count = 0;
+		function bindToLike() {
+			if (++count > 50) return; //wait max 5sec
+			if ( $('.outer .fb-like iframe').length == 0 )
+				setTimeout(bindToLike,100);
+			else
+				observer.observe($('.outer .fb-like iframe')[0], {attributes:true}),console.log('binded after:',count*100,'ms');
+		}
+	
+		bindToLike();
+	})($,observer);
+});
+		</script>
+	</head>
+	<body>
+		<div id="fb-root"></div>
+		<script>(function(d, s, id) {
+		  var js, fjs = d.getElementsByTagName(s)[0];
+		  if (d.getElementById(id)) return;
+		  js = d.createElement(s); js.id = id;
+		  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.3&appId=109759005784406";
+		  fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));</script>
+		
+		<span>test text</span>
+		<div class="outer" id="tmp_like">
+		   <div class="fb-like" data-href="https://developers.facebook.com/docs/plugins/" data-layout="button_count" data-action="recommend" data-show-faces="false" data-share="false"></div>
+		</div>
+	</body>
+</html>
